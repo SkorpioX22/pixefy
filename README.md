@@ -1,7 +1,7 @@
 # pixefy
 an image redraw system to make it blurry. powered by Python.
 
-# How does this work?
+# How does pixefy work?
 - Load and Resize the Image:
 
 After the user selects an image, the program loads it using Pillow (PIL.Image) and resizes it to the user-selected resolution (e.g., 128x128 pixels).
