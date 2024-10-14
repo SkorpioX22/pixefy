@@ -1,5 +1,5 @@
 # pixefy
-an image redraw system to make it blurry. powered by Python.
+an image redraw system to make images blurry. powered by Python.
 
 # How does pixefy work?
 - Load and Resize the Image:
