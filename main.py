@@ -19,12 +19,17 @@ def bit16_to_rgb(color_16bit):
     return (r, g, b)
 
 # Function to draw the image using Turtle
-def draw_image_with_turtle(image, resolution, pixel_size=5):
+def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True):
     # Set up Turtle
     turtle.speed(0)  # Fastest Turtle speed
-    turtle.hideturtle()
     turtle.colormode(255)
     turtle.penup()
+
+    # Hide or show the Turtle based on user selection
+    if hide_turtle:
+        turtle.hideturtle()
+    else:
+        turtle.showturtle()
 
     width, height = resolution, resolution
     start_x, start_y = -width // 2 * pixel_size, height // 2 * pixel_size  # Center image
@@ -76,20 +81,23 @@ def start_drawing():
     if image_path:
         # Get the chosen resolution from the slider
         resolution = resolution_slider.get()
-        
+
+        # Check if turtle should be hidden
+        hide_turtle = hide_turtle_var.get() == 1
+
         # Open the image and resize it to the selected resolution
         image = Image.open(image_path)
         image = image.convert("RGB")  # Ensure image is RGB format
         image = image.resize((resolution, resolution))  # Resize to user-selected resolution
 
         # Start the Turtle drawing
-        draw_image_with_turtle(image, resolution)
+        draw_image_with_turtle(image, resolution, hide_turtle=hide_turtle)
 
 # Function to create the main GUI window for selecting resolution, starting drawing, and showing pixel count
 def create_main_gui():
     root = tk.Tk()
     root.title("Turtle Image Drawer")
-    root.geometry("400x300")
+    root.geometry("400x350")
 
     # Add a label for the title
     label = tk.Label(root, text="Select Resolution and Image:", font=("Courier", 14))
@@ -100,6 +108,12 @@ def create_main_gui():
     resolution_slider = tk.Scale(root, from_=32, to_=256, orient=tk.HORIZONTAL, label="Resolution (px)", length=300, font=("Courier", 10))
     resolution_slider.set(128)  # Set default value to 128
     resolution_slider.pack(pady=10)
+
+    # Add a checkbutton for hiding/showing the turtle
+    global hide_turtle_var
+    hide_turtle_var = tk.IntVar(value=1)  # Default is to hide the turtle
+    hide_turtle_checkbutton = tk.Checkbutton(root, text="Hide Turtle", variable=hide_turtle_var, font=("Courier", 12))
+    hide_turtle_checkbutton.pack(pady=10)
 
     # Add a button to browse for an image and start drawing
     browse_button = tk.Button(root, text="Browse Image and Start Drawing", command=start_drawing, font=("Courier", 12))
