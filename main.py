@@ -19,7 +19,7 @@ def bit16_to_rgb(color_16bit):
     return (r, g, b)
 
 # Function to draw the image using Turtle
-def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True):
+def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True, fast_mode=False):
     # Set up Turtle
     turtle.speed(0)  # Fastest Turtle speed
     turtle.colormode(255)
@@ -36,6 +36,10 @@ def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True):
 
     total_pixels = width * height  # Total number of pixels
     pixels_drawn = 0  # Pixels drawn counter
+
+    # Variables to handle fast mode (split image into 4 phases)
+    fast_mode_thresholds = [total_pixels // 4, total_pixels // 2, 3 * total_pixels // 4, total_pixels]
+    fast_mode_step = 0
 
     for y in range(height):
         for x in range(width):
@@ -58,15 +62,18 @@ def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True):
             # Update the count of drawn pixels
             pixels_drawn += 1
             pixels_left = total_pixels - pixels_drawn
-            
-            # Update the pixel count in the main window
-            update_pixel_count(pixels_left)
+
+            if not fast_mode or pixels_drawn >= fast_mode_thresholds[fast_mode_step]:
+                update_pixel_count(pixels_left)
+                if fast_mode_step < len(fast_mode_thresholds) - 1:
+                    fast_mode_step += 1
+                if fast_mode:
+                    turtle.update()  # Manually update screen in fast mode
 
     # Final update after all pixels are drawn
     update_pixel_count("Drawing complete!")
-
-    # Keep the window open after drawing is done
-    turtle.done()
+    if not fast_mode:
+        turtle.done()
 
 # Function to update the pixel count in the Tkinter window
 def update_pixel_count(pixels_left):
@@ -85,43 +92,57 @@ def start_drawing():
         # Check if turtle should be hidden
         hide_turtle = hide_turtle_var.get() == 1
 
+        # Check if fast mode is enabled
+        fast_mode = fast_mode_var.get() == 1
+
         # Open the image and resize it to the selected resolution
         image = Image.open(image_path)
         image = image.convert("RGB")  # Ensure image is RGB format
         image = image.resize((resolution, resolution))  # Resize to user-selected resolution
 
+        if fast_mode:
+            turtle.tracer(0, 0)  # Disable real-time updates for fast mode
+        else:
+            turtle.tracer(1, 0)  # Restore default tracer settings
+
         # Start the Turtle drawing
-        draw_image_with_turtle(image, resolution, hide_turtle=hide_turtle)
+        draw_image_with_turtle(image, resolution, hide_turtle=hide_turtle, fast_mode=fast_mode)
 
 # Function to create the main GUI window for selecting resolution, starting drawing, and showing pixel count
 def create_main_gui():
     root = tk.Tk()
-    root.title("Turtle Image Drawer")
-    root.geometry("400x350")
+    root.title("Pixefy")
+    root.geometry("500x500")
 
     # Add a label for the title
-    label = tk.Label(root, text="Select Resolution and Image:", font=("Courier", 14))
+    label = tk.Label(root, text="Select Resolution and Image:", font=("Helvetica", 14))  # DM Sans-like clean font
     label.pack(pady=10)
 
     # Add a slider for resolution selection (from 32x32 to 256x256)
     global resolution_slider
-    resolution_slider = tk.Scale(root, from_=32, to_=256, orient=tk.HORIZONTAL, label="Resolution (px)", length=300, font=("Courier", 10))
+    resolution_slider = tk.Scale(root, from_=32, to_=256, orient=tk.HORIZONTAL, label="Resolution (px)", length=300, font=("Helvetica", 10))
     resolution_slider.set(128)  # Set default value to 128
     resolution_slider.pack(pady=10)
 
     # Add a checkbutton for hiding/showing the turtle
     global hide_turtle_var
     hide_turtle_var = tk.IntVar(value=1)  # Default is to hide the turtle
-    hide_turtle_checkbutton = tk.Checkbutton(root, text="Hide Turtle", variable=hide_turtle_var, font=("Courier", 12))
+    hide_turtle_checkbutton = tk.Checkbutton(root, text="Hide Turtle (Quickens Render)", variable=hide_turtle_var, font=("Helvetica", 12))
     hide_turtle_checkbutton.pack(pady=10)
 
+    # Add a checkbutton for fast mode
+    global fast_mode_var
+    fast_mode_var = tk.IntVar(value=0)  # Default is not to use fast mode
+    fast_mode_checkbutton = tk.Checkbutton(root, text="RapidRender (Nearly instant rendering)", variable=fast_mode_var, font=("Helvetica", 12))
+    fast_mode_checkbutton.pack(pady=10)
+
     # Add a button to browse for an image and start drawing
-    browse_button = tk.Button(root, text="Browse Image and Start Drawing", command=start_drawing, font=("Courier", 12))
+    browse_button = tk.Button(root, text="Browse Image and Start Drawing", command=start_drawing, font=("Helvetica", 12))
     browse_button.pack(pady=20)
 
     # Add a label to display the pixel count
     global count_label
-    count_label = tk.Label(root, text="Pixels left: 0", font=("Courier", 12), fg="black")
+    count_label = tk.Label(root, text="Pixels left: 0", font=("Helvetica", 12), fg="black")
     count_label.pack(pady=10)
 
     root.mainloop()
