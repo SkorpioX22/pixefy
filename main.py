@@ -1,7 +1,10 @@
 import turtle
-from PIL import Image
+from PIL import Image, ImageOps, EpsImagePlugin
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+import io
+
+EpsImagePlugin.gs_windows_binary = r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'  # Change path to your Ghostscript installation if necessary
 
 # Function to convert 24-bit RGB color to 16-bit RGB 565
 def rgb_to_16bit(color):
@@ -72,6 +75,7 @@ def draw_image_with_turtle(image, resolution, pixel_size=5, hide_turtle=True, fa
 
     # Final update after all pixels are drawn
     update_pixel_count("Drawing complete!")
+    save_button.config(state=tk.NORMAL)  # Enable the Save button after drawing is complete
     if not fast_mode:
         turtle.done()
 
@@ -108,11 +112,29 @@ def start_drawing():
         # Start the Turtle drawing
         draw_image_with_turtle(image, resolution, hide_turtle=hide_turtle, fast_mode=fast_mode)
 
+# Function to save the Turtle window as an image
+def save_image():
+    try:
+        # Ask user where to save the file
+        file_path = filedialog.asksaveasfilename(defaultextension=".png",
+                                                 filetypes=[("PNG files", "*.png")])
+        if file_path:
+            # Save the Turtle drawing as EPS
+            canvas = turtle.getcanvas()
+            ps = canvas.postscript(colormode='color')
+            
+            # Convert EPS to PNG using PIL
+            img = Image.open(io.BytesIO(ps.encode('utf-8')))
+            img.save(file_path, 'png')
+            messagebox.showinfo("Success", f"Image saved successfully as {file_path}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save the image: {str(e)}")
+
 # Function to create the main GUI window for selecting resolution, starting drawing, and showing pixel count
 def create_main_gui():
     root = tk.Tk()
     root.title("Pixefy")
-    root.geometry("500x500")
+    root.geometry("500x600")
 
     # Add a label for the title
     label = tk.Label(root, text="Select Resolution and Image:", font=("Helvetica", 14))  # DM Sans-like clean font
@@ -144,6 +166,11 @@ def create_main_gui():
     global count_label
     count_label = tk.Label(root, text="Pixels left: 0", font=("Helvetica", 12), fg="black")
     count_label.pack(pady=10)
+
+    # Add a button to save the final Turtle drawing as an image
+    global save_button
+    save_button = tk.Button(root, text="Save Image", command=save_image, font=("Helvetica", 12), state=tk.DISABLED)
+    save_button.pack(pady=20)
 
     root.mainloop()
 
